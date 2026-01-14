@@ -6,6 +6,7 @@ set -euo pipefail
 # ===============================
 
 OS="$(uname)"
+OS_LOWER="$(echo "$OS" | tr '[:upper:]' '[:lower:]')"
 BUILD_TYPE="Release"
 
 # Feature toggles
@@ -33,7 +34,7 @@ SLEPC_DIR_ARG=""
 PETSC_ARCH_ARG="${PETSC_ARCH:-}"
 
 # Build directory
-BUILD_DIR="build/${OS,,}"
+BUILD_DIR="build/${OS_LOWER}"
 
 # ===============================
 # Help
@@ -66,7 +67,7 @@ Examples:
   ./configure.sh
   ./configure.sh --compiler=g++ --blas=openblas
   ./configure.sh --compiler=mpic++ --mpi=on --blas=openblas
-  ./configure.sh --petsc=on --slepc=on --petsc-dir=\$PETSC_DIR --petsc-arch=\$PETSC_ARCH
+  ./configure.sh --petsc=on --slepc=on --petsc-dir=\$PETSC_DIR --petsc-arch=\$PETSC_ARCH --slepc-arch=\$SLEPC_DIR
 EOF
 }
 
@@ -146,7 +147,7 @@ if [[ -n "$SLEPC_DIR_ARG" ]]; then
 fi
 
 if [[ -n "$PKG_PATH_EXTRA" ]]; then
-  export PKG_CONFIG_PATH="$PKG_PATH_EXTRA:$PKG_CONFIG_PATH"
+  export PKG_CONFIG_PATH="$PKG_PATH_EXTRA:${PKG_CONFIG_PATH:-}"
   echo "[configure] PKG_CONFIG_PATH += $PKG_PATH_EXTRA"
 fi
 
