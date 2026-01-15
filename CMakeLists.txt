@@ -27,7 +27,7 @@ if(FTDQMC_BLAS_BACKEND STREQUAL "auto")
 endif()
 
 # Define the executable program and its source files
-add_executable(ftdqmc_demo src/main.cpp)
+add_executable(ftdqmc_demo apps/main.cpp)
 
 # ---------- MPI Configuration ----------
 if(FTDQMC_ENABLE_MPI)
@@ -61,6 +61,10 @@ if(FTDQMC_BLAS_BACKEND STREQUAL "accelerate")
 
 elseif(FTDQMC_BLAS_BACKEND STREQUAL "mkl")
   # ---------- MKL Configuration (Intel) ----------
+  # Set MKL interface and threading model before find_package
+  set(MKL_INTERFACE "lp64" CACHE STRING "MKL interface")
+  set(MKL_THREADING "intel_thread" CACHE STRING "MKL threading")
+  
   # Prefer MKL CONFIG packages if available (common with oneMKL installs).
   find_package(MKL CONFIG QUIET)
 

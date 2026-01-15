@@ -66,8 +66,7 @@ Build:
 Examples:
   ./configure.sh
   ./configure.sh --compiler=g++ --blas=openblas
-  ./configure.sh --compiler=mpic++ --mpi=on --blas=openblas
-  ./configure.sh --petsc=on --slepc=on --petsc-dir=\$PETSC_DIR --petsc-arch=\$PETSC_ARCH --slepc-arch=\$SLEPC_DIR
+  ./configure.sh --mpi=on --petsc=on --slepc=on --petsc-dir=\$PETSC_DIR --petsc-arch=\$PETSC_ARCH --slepc-dir=\$SLEPC_DIR
 EOF
 }
 
