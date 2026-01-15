@@ -1,0 +1,16 @@
+# FTDQMC-Studio example input (Square lattice)
+lattice = square
+Lx = 12
+Ly = 12
+
+Ltau = 160
+dtau = 0.05
+
+seed = 20250115
+
+pbc_x = true
+pbc_y = true
+
+twist.enabled = false
+twist.theta_x = 0.0
+twist.theta_y = 0.0

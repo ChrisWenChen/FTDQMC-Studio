@@ -45,7 +45,6 @@ third_party/
 *.log
 slurm-*.out
 slurm-*.err
-core
 core.*
 
 ############################################
