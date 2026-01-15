@@ -8,6 +8,47 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # (Optional but useful) Print compiler info for debugging
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION})")
 
+
+# ---------- High-Performance Optimization Toggle ----------
+# This 'option' command tells CMake to expect this variable.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
+    add_compile_options(-Wno-unknown-warning-option)
+endif()
+
+
+option(FTDQMC_OPTIMIZE "Enable high-performance optimizations" OFF)
+
+if(FTDQMC_OPTIMIZE)
+    # Only allow these aggressive flags if we are NOT in a Debug build
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message(STATUS "High-performance optimizations enabled.")
+        
+        # 1. General -O3 optimization
+        add_compile_options(-O3)
+
+        # 2. Hardware-specific instruction sets (SIMD/AVX)
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
+            add_compile_options(-xHost)
+            add_compile_options(-Wno-unknown-warning-option)
+        elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            if(NOT APPLE)
+                add_compile_options(-march=native)
+            endif()
+        endif()
+
+        # 3. Interprocedural Optimization (LTO/IPO)
+        include(CheckIPOSupported)
+        check_ipo_supported(RESULT ipo_supported OUTPUT error)
+        if(ipo_supported)
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+            message(STATUS "LTO/IPO enabled.")
+        endif()
+    else()
+        # If the user tries to turn on optimization in Debug mode, suppress it
+        message(WARNING "Optimization requested but suppressed for Debug build to maintain reliable debugging.")
+    endif()
+endif()
+
 # Define a user-configurable cache variable to select the BLAS backend with a fixed set of options.
 set(FTDQMC_BLAS_BACKEND "auto" CACHE STRING "BLAS backend: auto|mkl|openblas|accelerate")
 set_property(CACHE FTDQMC_BLAS_BACKEND PROPERTY STRINGS auto mkl openblas accelerate)
@@ -127,9 +168,11 @@ if(FTDQMC_ENABLE_GTEST AND BUILD_TESTING)
   include(FetchContent)
   FetchContent_Declare(
     googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-  )
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        v1.14.0
+    GIT_SHALLOW    TRUE
+    GIT_PROGRESS   TRUE
+)
   # Ensures the googletest targets (GTest::gtest_main, etc.) are actually created.
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)

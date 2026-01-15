@@ -16,6 +16,9 @@ PETSC="OFF"
 SLEPC="OFF"
 GTEST="ON"
 
+# Optimization flags default: OFF
+OPTIMIZE="OFF"
+
 # BLAS backend
 BLAS="auto"
 
@@ -47,6 +50,10 @@ Compiler / backend:
   --compiler=<g++|clang++|icpx|mpic++|mpiicpx>
   --blas=<auto|mkl|openblas|accelerate>
 
+Performance:
+  --opt=on|off          Enable/disable high-performance optimizations (default: off)
+  --type=<Release|Debug> Build type (default: Release)
+
 Features:
   --mpi=on|off
   --openmp=on|off
@@ -67,6 +74,8 @@ Examples:
   ./configure.sh
   ./configure.sh --compiler=g++ --blas=openblas
   ./configure.sh --mpi=on --petsc=on --slepc=on --petsc-dir=\$PETSC_DIR --petsc-arch=\$PETSC_ARCH --slepc-dir=\$SLEPC_DIR
+  ./configure.sh --opt=on
+  ./configure.sh --type=Debug
 EOF
 }
 
@@ -77,16 +86,18 @@ for arg in "$@"; do
   case "$arg" in
     --compiler=*)   COMPILER="${arg#*=}" ;;
     --blas=*)       BLAS="${arg#*=}" ;;
+    --opt=on)       OPTIMIZE="ON" ;;
+    --opt=off)      OPTIMIZE="OFF" ;;
     --mpi=on)       MPI="ON" ;;
-    --mpi=off)      MPI="OFF" ;;
+    --mpi-off)      MPI="OFF" ;;
     --openmp=on)    OPENMP="ON" ;;
     --openmp=off)   OPENMP="OFF" ;;
     --petsc=on)     PETSC="ON" ;;
-    --petsc=off)    PETSC="OFF" ;;
+    --petsc-off)    PETSC="OFF" ;;
     --slepc=on)     SLEPC="ON" ;;
-    --slepc=off)    SLEPC="OFF" ;;
+    --slepc-off)    SLEPC="OFF" ;;
     --gtest=on)     GTEST="ON" ;;
-    --gtest=off)    GTEST="OFF" ;;
+    --gtest-off)    GTEST="OFF" ;;
     --petsc-dir=*)  PETSC_DIR_ARG="${arg#*=}" ;;
     --slepc-dir=*)  SLEPC_DIR_ARG="${arg#*=}" ;;
     --petsc-arch=*) PETSC_ARCH_ARG="${arg#*=}" ;;
@@ -95,8 +106,7 @@ for arg in "$@"; do
     -h|--help)      usage; exit 0 ;;
     *)
       echo "Unknown option: $arg"
-      usage
-      exit 1
+      usage; exit 1
       ;;
   esac
 done
@@ -121,6 +131,16 @@ fi
 if [[ "$SLEPC" == "ON" && "$PETSC" == "OFF" ]]; then
   echo "[configure] slepc=on requires petsc -> enabling PETSc"
   PETSC="ON"
+fi
+
+if [[ "$BUILD_TYPE" == "Debug" && "$OPTIMIZE" == "ON" ]]; then
+  echo "----------------------------------------------------------------"
+  echo "Notice: Build Type is set to Debug. High-performance optimizations"
+  echo "        have been automatically disabled (--opt=off)."
+  echo "Reason: Optimizations reorder instructions and can strip variable"
+  echo "        information, making debugging with GDB/LLDB unreliable."
+  echo "----------------------------------------------------------------"
+  OPTIMIZE="OFF"
 fi
 
 # ===============================
@@ -154,19 +174,19 @@ fi
 # Summary
 # ===============================
 echo "----------------------------------------"
-echo "FTDQMC-Studio configure summary"
+echo "FTDQMC-Studio Configure Summary"
 echo "  OS            = $OS"
-echo "  Build type    = $BUILD_TYPE"
-echo "  CXX compiler  = $COMPILER"
-echo "  BLAS backend  = $BLAS"
+echo "  Build Type    = $BUILD_TYPE"
+echo "  CXX Compiler  = $COMPILER"
+echo "  BLAS Backend  = $BLAS"
+echo "  Optimization  = $OPTIMIZE (High Performance Flags)"
 echo "  MPI           = $MPI"
 echo "  OpenMP        = $OPENMP"
 echo "  PETSc         = $PETSC"
 echo "  SLEPc         = $SLEPC"
 echo "  GTest         = $GTEST"
-echo "  Build dir     = $BUILD_DIR"
+echo "  Build Dir     = $BUILD_DIR"
 echo "----------------------------------------"
-
 # ===============================
 # Run CMake configure
 # ===============================
@@ -178,7 +198,8 @@ cmake -S . -B "$BUILD_DIR" \
   -DFTDQMC_ENABLE_OPENMP="$OPENMP" \
   -DFTDQMC_ENABLE_PETSC="$PETSC" \
   -DFTDQMC_ENABLE_SLEPC="$SLEPC" \
-  -DFTDQMC_ENABLE_GTEST="$GTEST"
+  -DFTDQMC_ENABLE_GTEST="$GTEST" \
+  -DFTDQMC_OPTIMIZE="$OPTIMIZE"
 
 echo
 echo "[configure] Configuration completed successfully."
