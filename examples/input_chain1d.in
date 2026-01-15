@@ -1,0 +1,16 @@
+# FTDQMC-Studio example input (Chain 1D)
+lattice = chain1d
+Lx = 32
+Ly = 1
+
+Ltau = 200
+dtau = 0.05
+
+seed = 123456
+
+pbc_x = true
+pbc_y = false
+
+twist.enabled = false
+twist.theta_x = 0.0
+twist.theta_y = 0.0

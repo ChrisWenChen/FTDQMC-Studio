@@ -67,23 +67,36 @@ if(FTDQMC_BLAS_BACKEND STREQUAL "auto")
   endif()
 endif()
 
+# ---------- Core Library ----------
+add_library(ftdqmc STATIC
+  # Core / IO (add more as you implement)
+  src/io/simulation_params_io.cpp
+  # src/lattice/square.cpp
+  # src/lattice/honeycomb.cpp
+  # src/lattice/chain1d.cpp
+)
+
+target_include_directories(ftdqmc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 # Define the executable program and its source files
 add_executable(ftdqmc_demo apps/main.cpp)
+
+target_link_libraries(ftdqmc_demo PRIVATE ftdqmc)
 
 # ---------- MPI Configuration ----------
 if(FTDQMC_ENABLE_MPI)
   # REQUIRED makes CMake fail fast with a standard diagnostic message if MPI is missing
   find_package(MPI REQUIRED)
-  target_link_libraries(ftdqmc_demo PRIVATE MPI::MPI_CXX)
-  target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_USE_MPI=1)
+  target_link_libraries(ftdqmc PRIVATE MPI::MPI_CXX)
+  target_compile_definitions(ftdqmc PRIVATE FTDQMC_USE_MPI=1)
 endif()
 
 # ---------- OpenMP Configuration ----------
 if(FTDQMC_ENABLE_OPENMP)
   # REQUIRED makes CMake fail fast with a standard diagnostic message if OpenMP is missing
   find_package(OpenMP REQUIRED)
-  target_link_libraries(ftdqmc_demo PRIVATE OpenMP::OpenMP_CXX)
-  target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_USE_OPENMP=1)
+  target_link_libraries(ftdqmc PRIVATE OpenMP::OpenMP_CXX)
+  target_compile_definitions(ftdqmc PRIVATE FTDQMC_USE_OPENMP=1)
 endif()
 
 # ---------- BLAS/LAPACK Configuration ----------
@@ -97,9 +110,9 @@ if(FTDQMC_BLAS_BACKEND STREQUAL "accelerate")
 
   # REQUIRED gives a standard CMake error if not found
   find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
-  target_link_libraries(ftdqmc_demo PRIVATE ${ACCELERATE_FRAMEWORK})
-  target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_BLAS_ACCELERATE=1)
-  target_compile_definitions(ftdqmc_demo PRIVATE ACCELERATE_NEW_LAPACK)
+  target_link_libraries(ftdqmc PRIVATE ${ACCELERATE_FRAMEWORK})
+  target_compile_definitions(ftdqmc PRIVATE FTDQMC_BLAS_ACCELERATE=1)
+  target_compile_definitions(ftdqmc PRIVATE ACCELERATE_NEW_LAPACK)
 
 elseif(FTDQMC_BLAS_BACKEND STREQUAL "mkl")
   # ---------- MKL Configuration (Intel) ----------
@@ -111,16 +124,16 @@ elseif(FTDQMC_BLAS_BACKEND STREQUAL "mkl")
   find_package(MKL CONFIG QUIET)
 
   if(MKL_FOUND)
-    target_link_libraries(ftdqmc_demo PRIVATE MKL::MKL)
-    target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_BLAS_MKL=1)
+    target_link_libraries(ftdqmc PRIVATE MKL::MKL)
+    target_compile_definitions(ftdqmc PRIVATE FTDQMC_BLAS_MKL=1)
   else()
     # Fallback: try FindBLAS/FindLAPACK with Intel vendor.
     # This typically works if environment is sourced (e.g., oneAPI setvars.sh) or MKL is installed system-wide.
     set(BLA_VENDOR Intel10_64lp)
     find_package(BLAS REQUIRED)
     find_package(LAPACK REQUIRED)
-    target_link_libraries(ftdqmc_demo PRIVATE BLAS::BLAS LAPACK::LAPACK)
-    target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_BLAS_MKL=1)
+    target_link_libraries(ftdqmc PRIVATE BLAS::BLAS LAPACK::LAPACK)
+    target_compile_definitions(ftdqmc PRIVATE FTDQMC_BLAS_MKL=1)
   endif()
 
 elseif(FTDQMC_BLAS_BACKEND STREQUAL "openblas")
@@ -128,8 +141,8 @@ elseif(FTDQMC_BLAS_BACKEND STREQUAL "openblas")
   set(BLA_VENDOR OpenBLAS)
   find_package(BLAS REQUIRED)
   find_package(LAPACK REQUIRED)
-  target_link_libraries(ftdqmc_demo PRIVATE BLAS::BLAS LAPACK::LAPACK)
-  target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_BLAS_OPENBLAS=1)
+  target_link_libraries(ftdqmc PRIVATE BLAS::BLAS LAPACK::LAPACK)
+  target_compile_definitions(ftdqmc PRIVATE FTDQMC_BLAS_OPENBLAS=1)
 
 else()
   message(FATAL_ERROR "FTDQMC Error: Unknown FTDQMC_BLAS_BACKEND='${FTDQMC_BLAS_BACKEND}'. Use auto|mkl|openblas|accelerate.")
@@ -144,16 +157,16 @@ if(FTDQMC_ENABLE_PETSC)
   # You can control the search path by setting PKG_CONFIG_PATH (often pointing to .../lib/pkgconfig).
   pkg_check_modules(PETSC REQUIRED IMPORTED_TARGET petsc)
 
-  target_link_libraries(ftdqmc_demo PRIVATE PkgConfig::PETSC)
-  target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_USE_PETSC=1)
+  target_link_libraries(ftdqmc PRIVATE PkgConfig::PETSC)
+  target_compile_definitions(ftdqmc PRIVATE FTDQMC_USE_PETSC=1)
 
   # ---------- SLEPc Configuration ----------
   if(FTDQMC_ENABLE_SLEPC)
     # SLEPc requires PETSc; REQUIRED ensures clean failure if missing.
     pkg_check_modules(SLEPC REQUIRED IMPORTED_TARGET slepc)
 
-    target_link_libraries(ftdqmc_demo PRIVATE PkgConfig::SLEPC)
-    target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_USE_SLEPC=1)
+    target_link_libraries(ftdqmc PRIVATE PkgConfig::SLEPC)
+    target_compile_definitions(ftdqmc PRIVATE FTDQMC_USE_SLEPC=1)
   endif()
 endif()
 
@@ -177,14 +190,20 @@ if(FTDQMC_ENABLE_GTEST AND BUILD_TESTING)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
 
-  add_executable(test_smoke tests/test_smoke.cpp)
-  target_link_libraries(test_smoke PRIVATE GTest::gtest_main)
-
-  # Validate the test target exists (TARGET is the correct way to check, not "if(NOT test_smoke)")
-  if(NOT TARGET test_smoke)
-    message(FATAL_ERROR "FTDQMC Error: Failed to create test executable!") # Check for test target creation failure
-  endif()
-
+  # Now define your test executable(s)
   include(GoogleTest)
-  gtest_discover_tests(test_smoke) # Automatically find and register GTest units to CTest
+
+  # Helper to reduce boilerplate when adding new test executables
+  function(ftdqmc_add_gtest target)
+    add_executable(${target} ${ARGN})
+    target_link_libraries(${target} PRIVATE GTest::gtest_main ftdqmc)
+    gtest_discover_tests(${target})
+  endfunction()
+
+  # Smoke tests (basic compilation/link/runtime sanity)
+  ftdqmc_add_gtest(test_smoke tests/test_smoke.cpp)
+
+  # Example: module tests (uncomment as you add files)
+  ftdqmc_add_gtest(test_io tests/test_simulation_params_io.cpp)
+  # ftdqmc_add_gtest(test_lattice tests/test_chain1d.cpp tests/test_square.cpp tests/test_honeycomb.cpp)
 endif()

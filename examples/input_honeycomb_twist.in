@@ -1,0 +1,17 @@
+# FTDQMC-Studio example input (Honeycomb lattice with twist BC)
+lattice = honeycomb
+Lx = 6
+Ly = 6
+
+Ltau = 240
+dtau = 0.04
+
+seed = 42
+
+pbc_x = true
+pbc_y = true
+
+# Twisted boundary condition (angles in radians)
+twist.enabled = true
+twist.theta_x = 0.3
+twist.theta_y = 0.0
