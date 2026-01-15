@@ -171,12 +171,14 @@ int main(int argc, char** argv) {
   // - Else if MPI is enabled: MPI_Init().
   // This avoids double-initialization.
 
+#ifdef FTDQMC_USE_MPI
+  MPI_Init(&argc, &argv);
+#endif
+
 #ifdef FTDQMC_USE_SLEPC
   SlepcInitialize(&argc, &argv, nullptr, nullptr);
 #elif defined(FTDQMC_USE_PETSC)
   PetscInitialize(&argc, &argv, nullptr, nullptr);
-#elif defined(FTDQMC_USE_MPI)
-  MPI_Init(&argc, &argv);
 #endif
 
   int rank = 0;

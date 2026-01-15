@@ -58,6 +58,7 @@ if(FTDQMC_BLAS_BACKEND STREQUAL "accelerate")
   find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
   target_link_libraries(ftdqmc_demo PRIVATE ${ACCELERATE_FRAMEWORK})
   target_compile_definitions(ftdqmc_demo PRIVATE FTDQMC_BLAS_ACCELERATE=1)
+  target_compile_definitions(ftdqmc_demo PRIVATE ACCELERATE_NEW_LAPACK)
 
 elseif(FTDQMC_BLAS_BACKEND STREQUAL "mkl")
   # ---------- MKL Configuration (Intel) ----------
