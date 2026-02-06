@@ -31,21 +31,28 @@ if(FTDQMC_ENABLE_SLEPC AND NOT FTDQMC_ENABLE_PETSC)
   message(FATAL_ERROR "FTDQMC_ENABLE_SLEPC requires FTDQMC_ENABLE_PETSC=ON")
 endif()
 
-include(FetchContent)
+option(FTDQMC_USE_SYSTEM_TOMLPLUSPLUS "Use system tomlplusplus package" ON)
+option(FTDQMC_USE_SYSTEM_GTEST "Use system GTest package" ON)
+option(FTDQMC_ALLOW_DOWNLOADS "Allow CMake to download dependencies" OFF)
 
-FetchContent_Declare(
-  tomlplusplus
-  GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
-  GIT_TAG v3.4.0
-)
-FetchContent_MakeAvailable(tomlplusplus)
-
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.14.0
-)
-FetchContent_MakeAvailable(googletest)
+if(FTDQMC_USE_SYSTEM_TOMLPLUSPLUS)
+  find_package(tomlplusplus QUIET)
+endif()
+if(NOT tomlplusplus_FOUND)
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vendor/tomlplusplus/CMakeLists.txt)
+    add_subdirectory(vendor/tomlplusplus)
+  elseif(FTDQMC_ALLOW_DOWNLOADS)
+    include(FetchContent)
+    FetchContent_Declare(
+      tomlplusplus
+      GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+      GIT_TAG v3.4.0
+    )
+    FetchContent_MakeAvailable(tomlplusplus)
+  else()
+    message(FATAL_ERROR "tomlplusplus not found. Set FTDQMC_USE_SYSTEM_TOMLPLUSPLUS=ON with a system install, or add vendor/tomlplusplus.")
+  endif()
+endif()
 
 
 if(FTDQMC_ENABLE_MPI)
@@ -137,7 +144,11 @@ target_include_directories(ftdqmc_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(ftdqmc_core PUBLIC tomlplusplus::tomlplusplus)
+if(tomlplusplus_FOUND)
+  target_link_libraries(ftdqmc_core PUBLIC tomlplusplus::tomlplusplus)
+else()
+  target_link_libraries(ftdqmc_core PUBLIC tomlplusplus::tomlplusplus)
+endif()
 
 if(FTDQMC_ENABLE_MPI)
   target_link_libraries(ftdqmc_core PUBLIC MPI::MPI_CXX)
@@ -202,7 +213,30 @@ else()
   target_compile_definitions(ftdqmc_studio PRIVATE FTDQMC_ENABLE_HDF5=0)
 endif()
 
+if(FTDQMC_USE_SYSTEM_GTEST)
+  find_package(GTest QUIET)
+endif()
+if(NOT GTest_FOUND)
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vendor/googletest/CMakeLists.txt)
+    add_subdirectory(vendor/googletest)
+    set(FTDQMC_GTEST_LIB gtest_main)
+  elseif(FTDQMC_ALLOW_DOWNLOADS)
+    include(FetchContent)
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY https://github.com/google/googletest.git
+      GIT_TAG v1.14.0
+    )
+    FetchContent_MakeAvailable(googletest)
+    set(FTDQMC_GTEST_LIB gtest_main)
+  else()
+    message(FATAL_ERROR "GTest not found. Set FTDQMC_USE_SYSTEM_GTEST=ON with a system install, or add vendor/googletest.")
+  endif()
+else()
+  set(FTDQMC_GTEST_LIB GTest::gtest_main)
+endif()
+
 enable_testing()
 add_executable(ftdqmc_tests_honeycomb tests/unit/test_honeycomb.cpp)
-target_link_libraries(ftdqmc_tests_honeycomb PRIVATE ftdqmc_core gtest_main)
+target_link_libraries(ftdqmc_tests_honeycomb PRIVATE ftdqmc_core ${FTDQMC_GTEST_LIB})
 add_test(NAME honeycomb COMMAND ftdqmc_tests_honeycomb)
