@@ -37,7 +37,7 @@ Deliverables:
   - boundary conditions (at least OBC/PBC; twist BC can be an interface stub).
 - Model definitions:
   - Hubbard onsite parameters (U, μ).
-  - Haldane terms: NN `t1`, NNN `t2`, complex phase `φ`, and optional staggered mass.
+  - Haldane terms: NN `t`, NNN `t2`, complex phase `φ`.
 - Kinetic matrix builder `K`:
   - supports complex hoppings (required for Haldane-Hubbard).
   - backend-agnostic interface (dense now, PETSc later).

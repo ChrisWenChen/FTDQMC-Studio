@@ -154,17 +154,14 @@ Config load_config_from_toml(const std::string& path) {
     if (auto mu = (*model)["mu"].value<double>()) {
       config.model.mu = *mu;
     }
-    if (auto t1 = (*model)["t1"].value<double>()) {
-      config.model.t1 = *t1;
+    if (auto t = (*model)["t"].value<double>()) {
+      config.model.t = *t;
     }
     if (auto t2 = (*model)["t2"].value<double>()) {
       config.model.t2 = *t2;
     }
     if (auto phi = (*model)["phi"].value<double>()) {
       config.model.phi = *phi;
-    }
-    if (auto m = (*model)["staggered_mass"].value<double>()) {
-      config.model.staggered_mass = *m;
     }
   } else {
     throw std::runtime_error("Missing [model] table");

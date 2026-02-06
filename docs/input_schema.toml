@@ -54,23 +54,20 @@ basis_order = "AB"
 # Required. Enum: "hubbard" | "haldane_hubbard"
 type = "hubbard"
 
-# Milestone 1 uses t1/t2/phi/staggered_mass to build dense K (honeycomb only).
+# Milestone 1 uses t/t2/phi to build dense K (honeycomb only).
 # Hubbard interaction and chemical potential (double).
 U = 4.0
 mu = 0.0
 
-# --- Haldane-Hubbard extensions (used when type="haldane_hubbard") ---
-# nearest-neighbor hopping
-t1 = 1.0
+# --- Hubbard / Haldane-Hubbard hopping ---
+# nearest-neighbor hopping (Hubbard uses t)
+t = 1.0
 
 # next-nearest-neighbor hopping magnitude
 t2 = 0.0
 
 # Haldane phase (phi) in radians, used for complex NNN hopping.
 phi = 0.0
-
-# Optional staggered sublattice potential mass term (M); sign depends on sublattice.
-staggered_mass = 0.0
 
 
 ############################

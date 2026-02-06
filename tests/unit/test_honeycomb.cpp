@@ -188,7 +188,7 @@ TEST(HoneycombLattice, MatrixDimensionsMatchSites) {
   lattice::HoneycombLattice lat(3, 3, lattice::BoundaryCondition::PBC);
   model::ModelSpec spec;
   spec.type = model::ModelType::Hubbard;
-  spec.hubbard.t1 = 1.0;
+  spec.hubbard.t = 1.0;
   spec.hubbard.mu = 0.0;
   linalg::DenseMatrix K = model::build_dense(lat, spec);
   EXPECT_EQ(K.rows(), lat.Ns());
@@ -339,7 +339,7 @@ TEST(KBuilder, HermitianHubbardAndHaldane) {
 
   model::ModelSpec hubbard;
   hubbard.type = model::ModelType::Hubbard;
-  hubbard.hubbard.t1 = 1.0;
+  hubbard.hubbard.t = 1.0;
   hubbard.hubbard.mu = 0.2;
   linalg::DenseMatrix K1 = model::build_dense(lat, hubbard);
   double err1 = linalg::hermitian_error_norm(K1);
@@ -347,11 +347,10 @@ TEST(KBuilder, HermitianHubbardAndHaldane) {
 
   model::ModelSpec haldane;
   haldane.type = model::ModelType::HaldaneHubbard;
-  haldane.haldane.t1 = 1.0;
+  haldane.haldane.t = 1.0;
   haldane.haldane.t2 = 0.15;
   haldane.haldane.phi = 1.234;
   haldane.haldane.mu = -0.1;
-  haldane.haldane.staggered_mass = 0.05;
   linalg::DenseMatrix K2 = model::build_dense(lat, haldane);
   double err2 = linalg::hermitian_error_norm(K2);
   EXPECT_LT(err2, 1e-12);

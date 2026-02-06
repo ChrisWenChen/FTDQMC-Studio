@@ -21,7 +21,7 @@ basis_order = "AB"
 type = "hubbard"
 U = 6.0
 mu = 0.0
-t1 = 1.0
+t = 1.0
 
 [imag_time]
 beta = 8.0

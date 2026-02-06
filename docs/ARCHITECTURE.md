@@ -195,7 +195,7 @@ This section defines stable interface “shapes”. Actual implementation detail
 
 **Header:** `include/ftdqmc/model/model.hpp`
 - `enum class ModelType { Hubbard, HaldaneHubbard };`
-- `struct ModelSpec { ModelType type; double U; double mu; /* Haldane params: t1,t2,phi,staggered... */ };`
+- `struct ModelSpec { ModelType type; double U; double mu; /* Haldane params: t,t2,phi */ };`
 
 **Header:** `include/ftdqmc/model/kbuilder.hpp`
 - `class KBuilder`

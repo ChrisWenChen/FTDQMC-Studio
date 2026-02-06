@@ -129,15 +129,14 @@ ftdqmc::model::ModelSpec map_model(const ftdqmc::config::ModelSpec& in) {
     out.type = ftdqmc::model::ModelType::HaldaneHubbard;
     out.haldane.U = in.U;
     out.haldane.mu = in.mu;
-    out.haldane.t1 = in.t1;
+    out.haldane.t = in.t;
     out.haldane.t2 = in.t2;
     out.haldane.phi = in.phi;
-    out.haldane.staggered_mass = in.staggered_mass;
   } else {
     out.type = ftdqmc::model::ModelType::Hubbard;
     out.hubbard.U = in.U;
     out.hubbard.mu = in.mu;
-    out.hubbard.t1 = in.t1;
+    out.hubbard.t = in.t;
   }
   return out;
 }

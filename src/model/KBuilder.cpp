@@ -21,7 +21,7 @@ linalg::DenseMatrix build_dense(const lattice::HoneycombLattice& lattice, const 
       if (bond.kind != lattice::BondKind::NN) {
         continue;
       }
-      add_hopping(K, bond.i, bond.j, -p.t1);
+      add_hopping(K, bond.i, bond.j, -p.t);
     }
     for (int site = 0; site < Ns; ++site) {
       K(site, site) += -p.mu;
@@ -34,7 +34,7 @@ linalg::DenseMatrix build_dense(const lattice::HoneycombLattice& lattice, const 
     if (bond.kind != lattice::BondKind::NN) {
       continue;
     }
-    add_hopping(K, bond.i, bond.j, -p.t1);
+    add_hopping(K, bond.i, bond.j, -p.t);
   }
 
   for (const auto& bond : lattice.nnn_bonds()) {
@@ -47,9 +47,7 @@ linalg::DenseMatrix build_dense(const lattice::HoneycombLattice& lattice, const 
   }
 
   for (int site = 0; site < Ns; ++site) {
-    const auto sub = lattice.sublattice(site);
-    const double m = (sub == lattice::Sublattice::A) ? p.staggered_mass : -p.staggered_mass;
-    K(site, site) += -p.mu + m;
+    K(site, site) += -p.mu;
   }
 
   return K;

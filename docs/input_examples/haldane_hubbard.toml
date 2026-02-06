@@ -22,10 +22,9 @@ U = 4.0
 mu = 0.0
 
 # Haldane parameters
-t1 = 1.0
+t = 1.0
 t2 = 0.15
 phi = 1.5707963267948966   # pi/2
-staggered_mass = 0.0
 
 [imag_time]
 beta = 6.0
