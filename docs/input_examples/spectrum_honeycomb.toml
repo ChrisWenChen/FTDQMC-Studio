@@ -1,0 +1,81 @@
+# input_examples/spectrum_honeycomb.toml
+# Milestone 4/5:
+# - Generate/read field
+# - Build B_slices^sigma and B-chain (KV/VK/KVK)
+# - Build spacetime operator Mhat/Ohat^sigma (time-space formulation)
+# - Compute eigenvalues and singular values (dense or SLEPc)
+
+[workflow]
+mode = "spectrum"
+run_name = "honeycomb_spectrum"
+write_config_snapshot = true
+
+[lattice]
+type = "honeycomb"
+Lx = 4
+Ly = 4
+bc = "pbc"
+basis_order = "AB"
+
+[model]
+type = "hubbard"
+U = 6.0
+mu = 0.0
+t1 = 1.0
+
+[imag_time]
+beta = 8.0
+dtau = 0.1
+Ltau = 0
+
+[hs]
+type = "hirsch_discrete"
+channel = "spin"
+lambda_policy = "from_U_dtau"
+
+[field]
+# Choose one of: random/ferromagnetic/antiferromagnetic/from_file
+init = "antiferromagnetic"
+seed = 42
+path = ""
+layout = "time_major"
+alphabet = "ising_pm1"
+
+[propagator]
+# Choose: "kv" | "vk" | "kvk"
+b_form = "kv"
+# expK may be dense full exp (small) or PETSc-based later; keep as a string enum
+expk_method = "dense_full"
+
+# Task 0: eigenvalues of Mhat for each sigma (Up/Down)
+[[tasks]]
+kind = "eigs"
+target = "Mhat"
+backend = "dense"   # use "slepc" when PETSc+SLEPc enabled
+nev = 20
+tol = 1.0e-12
+max_it = 2000
+which = "largest_magnitude"
+write_vectors = false
+name = "eigs_mhat"
+
+# Task 1: singular values of Mhat
+[[tasks]]
+kind = "svd"
+target = "Mhat"
+backend = "dense"   # or "slepc"
+nev = 20
+tol = 1.0e-12
+max_it = 2000
+which = "largest"
+write_vectors = false
+name = "svd_mhat"
+
+[io]
+out_dir = "./out/spectrum_honeycomb"
+write_run_summary = true
+write_text = true
+write_hdf5 = true          # requires build with HDF5
+write_field_snapshot = true
+per_rank_logs = true
+overwrite_policy = "timestamp_subdir"

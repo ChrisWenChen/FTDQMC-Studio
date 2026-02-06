@@ -1,0 +1,200 @@
+# input_schema.toml
+# FTDQMC-Studio TOML configuration contract (authoritative schema-by-convention)
+# Notes:
+# - CLI: ftdqmc_studio <input_file> [PETSc/SLEPc options...]
+# - This file defines keys, types, defaults, and allowed enums.
+# - PETSc/SLEPc solver tuning MUST come from CLI options, not here.
+
+############################
+# [workflow]
+############################
+[workflow]
+# Required. Enum: "spectrum" | "mc"
+mode = "spectrum"
+
+# Optional. Free-form tag to appear in outputs/logs.
+run_name = "default_run"
+
+# Optional. If true, write a config snapshot into out_dir.
+write_config_snapshot = true
+
+# Optional. For testing/diagnostics only. Not recommended for production.
+compute_condition_number = false
+
+
+############################
+# [lattice]
+############################
+[lattice]
+# Required. Enum:
+# "honeycomb" | "chain1d" | "rectangular" | "hexagonal"
+type = "honeycomb"
+
+# Required for 2D lattices. For honeycomb, Lx,Ly define unit cells.
+Lx = 2
+Ly = 2
+
+# Optional. Enum: "obc" | "pbc" | "tbc"
+bc = "pbc"
+
+# Optional. Twist boundary condition parameters (only used when bc="tbc").
+# Convention: theta_x/theta_y in radians.
+twist_theta_x = 0.0
+twist_theta_y = 0.0
+
+# Optional. If honeycomb: choose basis/ordering conventions (kept for reproducibility).
+# E.g. "AB" means site ordering per unit cell A then B; "BA" allowed.
+basis_order = "AB"
+
+
+############################
+# [model]
+############################
+[model]
+# Required. Enum: "hubbard" | "haldane_hubbard"
+type = "hubbard"
+
+# Hubbard interaction and chemical potential (double).
+U = 4.0
+mu = 0.0
+
+# --- Haldane-Hubbard extensions (used when type="haldane_hubbard") ---
+# nearest-neighbor hopping
+t1 = 1.0
+
+# next-nearest-neighbor hopping magnitude
+t2 = 0.0
+
+# Haldane phase (phi) in radians, used for complex NNN hopping.
+phi = 0.0
+
+# Optional staggered sublattice potential mass term (M); sign depends on sublattice.
+staggered_mass = 0.0
+
+
+############################
+# [imag_time]
+############################
+[imag_time]
+# Imaginary time parameters. Need either (beta, dtau) or (dtau, Ltau) or (beta, Ltau).
+beta = 4.0
+dtau = 0.1
+# Optional. If set (>0), Ltau overrides round(beta/dtau). Otherwise computed.
+Ltau = 0
+
+
+############################
+# [hs]
+############################
+[hs]
+# Required. Enum (initial set):
+# "hirsch_discrete"   # discrete Ising-like HS (baseline)
+type = "hirsch_discrete"
+
+# Optional. HS channel enum (initial set):
+# "spin" | "charge"
+channel = "spin"
+
+# Optional. Some HS variants need sign conventions / lambdas; keep for future.
+# In milestone 0-2 you may ignore these fields but must parse them.
+lambda_policy = "from_U_dtau"  # enum: "from_U_dtau" | "explicit"
+lambda_value = 0.0            # only used when lambda_policy="explicit"
+
+
+############################
+# [field]
+############################
+[field]
+# Required. Enum:
+# "ferromagnetic" | "antiferromagnetic" | "random" | "from_file"
+init = "random"
+
+# RNG seed used when init != "from_file"
+seed = 123456789
+
+# Path used when init="from_file"
+path = ""
+
+# Optional. Storage layout hint for IO; "time_major" means contiguous by time slices.
+layout = "time_major"  # enum: "time_major" | "site_major"
+
+# Optional. Field value alphabet for discrete fields; common is ±1.
+# If hs transform later supports other alphabets, keep it consistent.
+alphabet = "ising_pm1"  # enum: "ising_pm1"
+
+
+############################
+# [propagator]
+############################
+[propagator]
+# B-slice construction form. Enum: "kv" | "vk" | "kvk"
+# (Interface-level required early, full stabilization comes later.)
+b_form = "vk"
+
+# expK strategy is backend-dependent; keep parseable.
+# Enum: "dense_full" | "petsc_expmv" | "placeholder"
+expk_method = "placeholder"
+
+
+############################
+# [[tasks]]
+############################
+# Task list for workflow.mode="spectrum"
+# In spectrum mode, kind must be "eigs" or "svd".
+# Solver tuning for SLEPc comes from PETSc/SLEPc CLI options; here just declare intent.
+[[tasks]]
+# Required. Enum: "eigs" | "svd" | "measure"
+kind = "eigs"
+
+# Required. Enum: "M_mat" | "Bchain" | "Bprod"
+# M_mat == spacetime operator M_mat^sigma (time-space formulation).
+target = "M_mat"
+
+# Optional. Enum: "dense" | "slepc"
+backend = "dense"
+
+# Optional. For eigs/svd: how many values requested (nev>0).
+nev = 6
+
+# Optional. Iterative solver parameters (used mainly by slepc backend).
+tol = 1.0e-10
+max_it = 1000
+
+# Optional. Which part of spectrum. For eigs:
+# "largest_magnitude" | "smallest_magnitude" | "largest_real" | "smallest_real"
+# For svd:
+# "largest" | "smallest"
+which = "largest_magnitude"
+
+# Optional. If true, write eigen/singular vectors (can be huge); default false.
+write_vectors = false
+
+# Optional. Name override for output files/groups.
+name = "task0_eigs_m_mat"
+
+
+############################
+# [io]
+############################
+[io]
+# Output directory. Default "./out"
+out_dir = "./out"
+
+# Always write a run summary text file.
+write_run_summary = true
+
+# Data formats:
+# - text is baseline and should always be available
+# - hdf5 is optional and controlled by build flag + runtime setting
+write_text = true
+write_hdf5 = false
+
+# Optional. Save field snapshot(s)
+write_field_snapshot = true
+
+# Optional. Create per-rank logs by default.
+per_rank_logs = true
+
+# Optional. Overwrite policy.
+# Enum: "overwrite" | "timestamp_subdir"
+overwrite_policy = "timestamp_subdir"

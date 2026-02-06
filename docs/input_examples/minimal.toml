@@ -1,0 +1,65 @@
+# input_examples/minimal.toml
+# Milestone 0 smoke test:
+# - Parse TOML
+# - Init MPI / (optional PETSc)
+# - Create out_dir + logs
+# - Print placeholder pipeline steps
+# - Write dummy status file
+
+[workflow]
+mode = "spectrum"
+run_name = "milestone0_smoke"
+write_config_snapshot = true
+
+[lattice]
+type = "honeycomb"
+Lx = 1
+Ly = 1
+bc = "pbc"
+basis_order = "AB"
+
+[model]
+type = "hubbard"
+U = 4.0
+mu = 0.0
+t1 = 1.0
+
+[imag_time]
+beta = 1.0
+dtau = 0.5
+Ltau = 0
+
+[hs]
+type = "hirsch_discrete"
+channel = "spin"
+lambda_policy = "from_U_dtau"
+
+[field]
+init = "random"
+seed = 20260205
+layout = "time_major"
+alphabet = "ising_pm1"
+
+[propagator]
+b_form = "vk"
+expk_method = "placeholder"
+
+[[tasks]]
+kind = "eigs"
+target = "Mhat"
+backend = "dense"
+nev = 2
+tol = 1.0e-8
+max_it = 200
+which = "largest_magnitude"
+write_vectors = false
+name = "smoke_eigs_mhat"
+
+[io]
+out_dir = "./out/m0_minimal"
+write_run_summary = true
+write_text = true
+write_hdf5 = false
+write_field_snapshot = true
+per_rank_logs = true
+overwrite_policy = "timestamp_subdir"

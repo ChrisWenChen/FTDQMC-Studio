@@ -1,0 +1,82 @@
+# input_examples/haldane_hubbard.toml
+# Milestone 4/5:
+# Haldane-Hubbard on honeycomb with complex NNN hopping (t2, phi).
+# This typically implies complex-valued K, expK, and B_slices.
+# Same spectrum tasks on Mhat/Ohat^sigma.
+
+[workflow]
+mode = "spectrum"
+run_name = "haldane_hubbard_spectrum"
+write_config_snapshot = true
+
+[lattice]
+type = "honeycomb"
+Lx = 3
+Ly = 3
+bc = "pbc"
+basis_order = "AB"
+
+[model]
+type = "haldane_hubbard"
+U = 4.0
+mu = 0.0
+
+# Haldane parameters
+t1 = 1.0
+t2 = 0.15
+phi = 1.5707963267948966   # pi/2
+staggered_mass = 0.0
+
+[imag_time]
+beta = 6.0
+dtau = 0.1
+Ltau = 0
+
+[hs]
+type = "hirsch_discrete"
+channel = "spin"
+lambda_policy = "from_U_dtau"
+
+[field]
+init = "random"
+seed = 20260205
+path = ""
+layout = "time_major"
+alphabet = "ising_pm1"
+
+[propagator]
+b_form = "vk"
+expk_method = "dense_full"
+
+# Eigenvalues (consider slepc for larger Ns*Ltau)
+[[tasks]]
+kind = "eigs"
+target = "Mhat"
+backend = "dense"   # switch to "slepc" when enabled
+nev = 30
+tol = 1.0e-12
+max_it = 3000
+which = "largest_magnitude"
+write_vectors = false
+name = "eigs_mhat_haldane"
+
+# Singular values
+[[tasks]]
+kind = "svd"
+target = "Mhat"
+backend = "dense"
+nev = 30
+tol = 1.0e-12
+max_it = 3000
+which = "largest"
+write_vectors = false
+name = "svd_mhat_haldane"
+
+[io]
+out_dir = "./out/haldane_hubbard"
+write_run_summary = true
+write_text = true
+write_hdf5 = true
+write_field_snapshot = true
+per_rank_logs = true
+overwrite_policy = "timestamp_subdir"
