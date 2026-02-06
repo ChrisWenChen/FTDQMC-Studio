@@ -9,6 +9,10 @@
 #include "ftdqmc/core/BuildInfo.hpp"
 #include "ftdqmc/core/Environment.hpp"
 #include "ftdqmc/core/Logging.hpp"
+#include "ftdqmc/linalg/DenseMatrix.hpp"
+#include "ftdqmc/lattice/Honeycomb.hpp"
+#include "ftdqmc/model/KBuilder.hpp"
+#include "ftdqmc/model/Model.hpp"
 
 #if FTDQMC_ENABLE_PETSC
   #include <petsc.h>
@@ -105,6 +109,39 @@ void log_task_summary(const ftdqmc::config::Config& config) {
   }
 }
 
+ftdqmc::lattice::BoundaryCondition map_bc(ftdqmc::config::BoundaryCondition bc) {
+  using BC = ftdqmc::config::BoundaryCondition;
+  switch (bc) {
+    case BC::OBC:
+      return ftdqmc::lattice::BoundaryCondition::OBC;
+    case BC::PBC:
+      return ftdqmc::lattice::BoundaryCondition::PBC;
+    case BC::TBC:
+      return ftdqmc::lattice::BoundaryCondition::TBC;
+    default:
+      return ftdqmc::lattice::BoundaryCondition::PBC;
+  }
+}
+
+ftdqmc::model::ModelSpec map_model(const ftdqmc::config::ModelSpec& in) {
+  ftdqmc::model::ModelSpec out;
+  if (in.type == ftdqmc::config::ModelType::HaldaneHubbard) {
+    out.type = ftdqmc::model::ModelType::HaldaneHubbard;
+    out.haldane.U = in.U;
+    out.haldane.mu = in.mu;
+    out.haldane.t1 = in.t1;
+    out.haldane.t2 = in.t2;
+    out.haldane.phi = in.phi;
+    out.haldane.staggered_mass = in.staggered_mass;
+  } else {
+    out.type = ftdqmc::model::ModelType::Hubbard;
+    out.hubbard.U = in.U;
+    out.hubbard.mu = in.mu;
+    out.hubbard.t1 = in.t1;
+  }
+  return out;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -176,6 +213,30 @@ int main(int argc, char** argv) {
     logger.info("workflow.mode=" + workflow_mode_to_string(config.workflow_mode));
     logger.info("workflow.run_name=" + config.run_name);
     log_task_summary(config);
+
+    if (config.lattice.type != ftdqmc::config::LatticeType::Honeycomb) {
+      throw std::runtime_error("Milestone 1 supports only honeycomb lattice");
+    }
+    auto bc = map_bc(config.lattice.bc);
+    ftdqmc::lattice::HoneycombLattice lattice(config.lattice.Lx, config.lattice.Ly, bc,
+                                              config.lattice.twist_theta_x,
+                                              config.lattice.twist_theta_y);
+    if (config.lattice.bc == ftdqmc::config::BoundaryCondition::TBC) {
+      logger.info("twist BC stub: theta_x=" + std::to_string(config.lattice.twist_theta_x) +
+                  ", theta_y=" + std::to_string(config.lattice.twist_theta_y));
+    }
+    logger.info("lattice.Ns=" + std::to_string(lattice.Ns()) +
+                ", Lx=" + std::to_string(lattice.Lx()) +
+                ", Ly=" + std::to_string(lattice.Ly()));
+    logger.info("lattice.nn_bonds=" + std::to_string(lattice.nn_bonds().size()) +
+                ", lattice.nnn_bonds=" + std::to_string(lattice.nnn_bonds().size()));
+
+    const auto model = map_model(config.model);
+    ftdqmc::linalg::DenseMatrix K = ftdqmc::model::build_dense(lattice, model);
+    const double herm_err = ftdqmc::linalg::hermitian_error_norm(K);
+    const auto tr = ftdqmc::linalg::trace(K);
+    logger.info("K.hermitian_error_norm=" + std::to_string(herm_err));
+    logger.info("K.trace=" + std::to_string(tr.real()) + " + " + std::to_string(tr.imag()) + "i");
 
     logger.info("generate/read field: placeholder");
     logger.info("build M_mat^sigma: placeholder");

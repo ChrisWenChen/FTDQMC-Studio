@@ -54,6 +54,7 @@ basis_order = "AB"
 # Required. Enum: "hubbard" | "haldane_hubbard"
 type = "hubbard"
 
+# Milestone 1 uses t1/t2/phi/staggered_mass to build dense K (honeycomb only).
 # Hubbard interaction and chemical potential (double).
 U = 4.0
 mu = 0.0

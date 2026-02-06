@@ -57,6 +57,8 @@ FTDQMC-Studio is a general-purpose scientific computing software centered around
   - SLEPc (eigensolver/SVD)
 - HDF5 output support must be optional.
 
+**Hard constraint:** The codebase must not use Eigen. Dense matrices must be stored in a project-defined, column-major layout compatible with MKL/Accelerate/OpenBLAS.
+
 ---
 
 ## 2. Repository Structure (Canonical)
@@ -169,7 +171,7 @@ Provide options (names may vary but must exist and be documented):
 ## 7. Spectrum Computation Contract
 
 ### 7.1 Dense Mode
-- For small systems, allow full eigenvalue decomposition / SVD via BLAS/LAPACK-based routines (or Eigen if approved).
+- For small systems, allow full eigenvalue decomposition / SVD via BLAS/LAPACK-based routines (no Eigen).
 - Output eigenvalues/singular values in a stable, documented format.
 
 ### 7.2 PETSc/SLEPc Mode
@@ -197,6 +199,10 @@ If HDF5 enabled, use a structured layout (exact paths can evolve but must remain
 ---
 
 ## 9. Testing Contract (Minimal)
+
+### 9.1 Test Framework
+- Use GoogleTest (gtest) for unit and regression tests.
+- All tests must be written using gtest macros.
 
 ### 9.1 Build Tests
 - CI or local tests must compile with:

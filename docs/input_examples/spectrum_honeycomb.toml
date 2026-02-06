@@ -2,7 +2,7 @@
 # Milestone 4/5:
 # - Generate/read field
 # - Build B_slices^sigma and B-chain (KV/VK/KVK)
-# - Build spacetime operator Mhat/Ohat^sigma (time-space formulation)
+# - Build spacetime operator M_mat^sigma (time-space formulation)
 # - Compute eigenvalues and singular values (dense or SLEPc)
 
 [workflow]
@@ -47,10 +47,10 @@ b_form = "kv"
 # expK may be dense full exp (small) or PETSc-based later; keep as a string enum
 expk_method = "dense_full"
 
-# Task 0: eigenvalues of Mhat for each sigma (Up/Down)
+# Task 0: eigenvalues of M_mat for each sigma (Up/Down)
 [[tasks]]
 kind = "eigs"
-target = "Mhat"
+target = "M_mat"
 backend = "dense"   # use "slepc" when PETSc+SLEPc enabled
 nev = 20
 tol = 1.0e-12
@@ -59,10 +59,10 @@ which = "largest_magnitude"
 write_vectors = false
 name = "eigs_mhat"
 
-# Task 1: singular values of Mhat
+# Task 1: singular values of M_mat
 [[tasks]]
 kind = "svd"
-target = "Mhat"
+target = "M_mat"
 backend = "dense"   # or "slepc"
 nev = 20
 tol = 1.0e-12

@@ -40,6 +40,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(tomlplusplus)
 
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.14.0
+)
+FetchContent_MakeAvailable(googletest)
+
+
 if(FTDQMC_ENABLE_MPI)
   find_package(MPI REQUIRED)
 endif()
@@ -121,6 +129,8 @@ message(STATUS "  LINALG backend     : ${FTDQMC_LINALG_BACKEND}")
 add_library(ftdqmc_core
   src/core/Logging.cpp
   src/config/Config.cpp
+  src/lattice/Honeycomb.cpp
+  src/model/KBuilder.cpp
 )
 
 target_include_directories(ftdqmc_core PUBLIC
@@ -191,3 +201,8 @@ if(FTDQMC_ENABLE_HDF5)
 else()
   target_compile_definitions(ftdqmc_studio PRIVATE FTDQMC_ENABLE_HDF5=0)
 endif()
+
+enable_testing()
+add_executable(ftdqmc_tests_honeycomb tests/unit/test_honeycomb.cpp)
+target_link_libraries(ftdqmc_tests_honeycomb PRIVATE ftdqmc_core gtest_main)
+add_test(NAME honeycomb COMMAND ftdqmc_tests_honeycomb)

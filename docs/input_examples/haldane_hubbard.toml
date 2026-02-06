@@ -2,7 +2,7 @@
 # Milestone 4/5:
 # Haldane-Hubbard on honeycomb with complex NNN hopping (t2, phi).
 # This typically implies complex-valued K, expK, and B_slices.
-# Same spectrum tasks on Mhat/Ohat^sigma.
+# Same spectrum tasks on M_mat^sigma (spacetime operator).
 
 [workflow]
 mode = "spectrum"
@@ -51,7 +51,7 @@ expk_method = "dense_full"
 # Eigenvalues (consider slepc for larger Ns*Ltau)
 [[tasks]]
 kind = "eigs"
-target = "Mhat"
+target = "M_mat"
 backend = "dense"   # switch to "slepc" when enabled
 nev = 30
 tol = 1.0e-12
@@ -63,7 +63,7 @@ name = "eigs_mhat_haldane"
 # Singular values
 [[tasks]]
 kind = "svd"
-target = "Mhat"
+target = "M_mat"
 backend = "dense"
 nev = 30
 tol = 1.0e-12
