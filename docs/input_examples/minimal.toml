@@ -1,10 +1,5 @@
 # input_examples/minimal.toml
-# Milestone 0 smoke test:
-# - Parse TOML
-# - Init MPI / (optional PETSc)
-# - Create out_dir + logs
-# - Print placeholder pipeline steps
-# - Write dummy status file
+# Milestone 0 minimal smoke test
 
 [workflow]
 mode = "spectrum"
@@ -46,14 +41,14 @@ expk_method = "placeholder"
 
 [[tasks]]
 kind = "eigs"
-target = "Mhat"
+target = "M_mat"
 backend = "dense"
 nev = 2
 tol = 1.0e-8
 max_it = 200
 which = "largest_magnitude"
 write_vectors = false
-name = "smoke_eigs_mhat"
+name = "smoke_eigs_m_mat"
 
 [io]
 out_dir = "./out/m0_minimal"
